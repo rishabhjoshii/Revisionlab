@@ -23,6 +23,8 @@ const dsaSchema = new Schema({
     title: String,
     url: String,
     tags: String,
+    difficulty: String,
+    revisionCount: Number,
     author:{
         type: Schema.Types.ObjectId,
         ref: 'User'

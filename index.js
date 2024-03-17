@@ -5,6 +5,7 @@ const {Dsa, User} = require('./db');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
+const authMiddleware = require('./authMiddleware');
 require('dotenv').config();
 
 const app = express();
@@ -67,7 +68,7 @@ app.post('/login', async function(req, res, next){
 
         if(!passwordVerify) return res.status(401).json({msg: "Incorrect password",a:0});
 
-        const token = jwt.sign({username,email},process.env.JWT_SECRET_KEY);
+        const token = jwt.sign({username,email,id:user._id},process.env.JWT_SECRET_KEY);
         console.log("token is here:",token);
 
         return res.json({msg: "login successful",token:token,a:1});
@@ -78,6 +79,31 @@ app.post('/login', async function(req, res, next){
     }
 } )
 
+app.post('/add',authMiddleware, async function(req,res,next){
+    try{
+        const {title,url,tags,difficulty} = req.body;
+        const token = req.headers;
+        
+        //if the user is authenticated add question
+        const decodedData = req.user;
+        console.log("decoded data:",decodedData);
+
+        const addquestion = await Dsa.create({
+            title,
+            url,
+            tags,
+            difficulty,
+            revisionCount: 0,
+            author: decodedData.id,
+        })
+
+        return res.json({msg:"question added successfully",a:1,addquestion});
+    }
+    catch(err){
+        console.log("error while adding question",err);
+        return res.json({msg:"error while adding question",a:0,err});
+    }
+});
 
 
 app.listen(3000);
