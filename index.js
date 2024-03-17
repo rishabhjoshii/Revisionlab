@@ -82,7 +82,6 @@ app.post('/login', async function(req, res, next){
 app.post('/add',authMiddleware, async function(req,res,next){
     try{
         const {title,url,tags,difficulty} = req.body;
-        const token = req.headers;
         
         //if the user is authenticated add question
         const decodedData = req.user;
@@ -104,6 +103,40 @@ app.post('/add',authMiddleware, async function(req,res,next){
         return res.json({msg:"error while adding question",a:0,err});
     }
 });
+
+app.get('/list',authMiddleware, async function(req,res,next){
+    try{
+        const decodedData = req.user;
+
+        const list = await Dsa.find({author: decodedData.id}).sort({revisionCount:1});
+        if(!list || list.length==0) return res.json({msg: "cant find question list",a:0});
+
+        return res.json({msg:"question list fetched successfully",a:1,list});
+    }
+    catch(err){
+        console.log("error at /list endpoint",err);
+        return res.json({msg:"error at /list endpoint",a:0});
+    }
+})
+
+app.post('/countupdate/:id', authMiddleware, async (req, res) => {
+    try{
+        const {id} = req.params;
+        const updateCount = await Dsa.updateOne(
+            {_id:id},
+            { $inc: { revisionCount: 1 }
+        })
+        if (!updateCount) {
+            return res.status(404).json({ error: 'Question not found' ,a:0});
+        }
+        return res.status(200).json({ message: 'RevisionCount updated successfully' ,a:1});
+    }
+    catch(err){
+        console.error('Error updating revision count:', err);
+        return res.status(400).json({ msg: 'error while incresing count',a:0 ,error: err });
+    }
+    
+})
 
 
 app.listen(3000);
