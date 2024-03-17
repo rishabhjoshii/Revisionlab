@@ -34,7 +34,7 @@ app.post('/signup', async function(req, res, next){
         const {username,email,password} = req.body;
         const result = await userSchema.safeParse(req.body);
         if(!result.success){
-            return res.status(400).json({msg: "invalid credentials"});
+            return res.status(400).json({msg: "invalid credentials",a:0});
         }
     
         const newUser = await new User({
@@ -44,11 +44,11 @@ app.post('/signup', async function(req, res, next){
         })
         await newUser.save();
     
-        return res.json({msg:"signup successful"});
+        return res.json({msg:"signup successful",a:1});
     }
     catch(err){
         console.log("error while signing up",err);
-        return res.status(400).json({msg:"invalid credentials",err});
+        return res.status(400).json({msg:"invalid credentials",err,a:0});
     }
 })
 
@@ -57,24 +57,24 @@ app.post('/login', async function(req, res, next){
         const {username,email,password} = req.body;
         const result = await userSchema.safeParse(req.body);
         if(!result.success){
-            return res.status(400).json({msg: "invalid credentials"});
+            return res.status(400).json({msg: "invalid credentials",a:0});
         }
 
         const user = await User.findOne({username,email});
-        if(!user) return res.status(401).json({msg: "user not found"});
+        if(!user) return res.status(401).json({msg: "user not found",a:0});
 
         const passwordVerify = bcrypt.compareSync(password,user.password);
 
-        if(!passwordVerify) return res.status(401).json({msg: "Incorrect password"});
+        if(!passwordVerify) return res.status(401).json({msg: "Incorrect password",a:0});
 
         const token = jwt.sign({username,email},process.env.JWT_SECRET_KEY);
         console.log("token is here:",token);
 
-        return res.json({msg: "login successful",token:token});
+        return res.json({msg: "login successful",token:token,a:1});
     }
     catch(err){
         console.log("error while login", err);
-        return res.status(400).json({msg:"error while login",err});
+        return res.status(400).json({msg:"error while login",err,a:0});
     }
 } )
 
